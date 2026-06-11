@@ -73,3 +73,26 @@ It usually combines:
 
 For this robot, the IMU tells the controller whether the robot is fallen over or
 upright.
+
+## Discussion Notes
+
+The public discussion confirms the basic plan:
+
+1. Train with reinforcement learning first.
+2. Test the learned behavior in simulation.
+3. Export the neural network.
+4. Load the neural network onto the microcontroller.
+5. Run the real robot offline.
+
+Offline means the robot does not call a cloud API while moving. The learned
+policy is stored locally in `policy_network.h` and executed directly on the
+M5Atom.
+
+Mentioned future infrastructure:
+
+- PufferLib RL
+- MuJoCo baseline
+- NVIDIA Warp
+
+Those are about making RL training faster. They do not change the first build
+plan.
