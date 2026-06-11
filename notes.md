@@ -96,3 +96,35 @@ Mentioned future infrastructure:
 
 Those are about making RL training faster. They do not change the first build
 plan.
+
+## Local Simulation Status
+
+Reference repo cloned locally:
+
+`reference/SelfRisingRobot`
+
+Local Python environment:
+
+`.venv`
+
+Installed packages from:
+
+`reference/SelfRisingRobot/RL/requirements.txt`
+
+Smoke test:
+
+`sim_smoke_test.py`
+
+Result:
+
+- MuJoCo model loads
+- trained PPO model loads
+- environment resets from `roll_pos`
+- policy steps the sim without crashing
+- after 20 steps: upright score around `0.685`
+
+Run from the RL folder:
+
+```bash
+../../.venv/bin/python ../../sim_smoke_test.py
+```
