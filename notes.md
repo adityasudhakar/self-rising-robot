@@ -1,0 +1,75 @@
+# Self Rising Robot Notes
+
+Reference repo:
+https://github.com/homemadegarbage/SelfRisingRobot
+
+## What It Is
+
+Tiny 2-servo robot that learns a get-up motion in MuJoCo simulation, then runs
+the learned controller on a real M5Atom robot.
+
+## How The Repo Works
+
+1. `RL/robo1.xml` defines the physical robot in MuJoCo.
+2. `RL/robo1_env.py` wraps the MuJoCo model as a Gymnasium RL environment.
+3. A PPO policy is trained to get the robot upright from fallen poses.
+4. The trained policy is exported to `Arduino/robo03/policy_network.h`.
+5. `Arduino/robo03/robo03.ino` runs the policy on M5Atom and drives two servos.
+
+## Policy Inputs And Outputs
+
+Inputs:
+
+- roll
+- pitch
+- servo1 target
+- servo2 target
+
+Outputs:
+
+- servo1 target delta
+- servo2 target delta
+
+So the neural net is not doing vision. It is reading tilt and current servo
+targets, then nudging the two servos.
+
+## Hardware Notes
+
+M5Atom is not like a Raspberry Pi. It is much closer to Arduino.
+
+- M5Atom: ESP32 microcontroller board
+- Raspberry Pi: Linux computer
+- Arduino folder in the repo means Arduino IDE / Arduino-style firmware, not an
+  Arduino Uno board
+
+The code uses:
+
+- M5Atom IMU for roll/pitch
+- servo 1 on GPIO 26
+- servo 2 on GPIO 32
+- Wi-Fi access point `robo1`
+- browser UI at `http://192.168.42.1`
+
+## M5Atom Choice
+
+Do not use Arduino Uno for this version. Uno lacks built-in Wi-Fi and IMU, has
+less CPU/memory, and would need extra modules.
+
+For this repo, prefer M5Stack Atom Matrix over Atom Lite because the code uses
+`M5.IMU`.
+
+- Atom Lite: ESP32, Wi-Fi, button, LED, Grove port, but no built-in IMU in the
+  docs checked
+- Atom Matrix: ESP32 plus built-in MPU6886 IMU
+
+## IMU
+
+IMU means inertial measurement unit.
+
+It usually combines:
+
+- accelerometer: tilt / acceleration
+- gyroscope: rotation rate
+
+For this robot, the IMU tells the controller whether the robot is fallen over or
+upright.
