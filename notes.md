@@ -241,3 +241,44 @@ Interpretation:
 
 The large run produced a stronger policy artifact than the quick/medium runs,
 but we still need to visually test it across the fallen poses.
+
+## Why Our Training Did Not Match OP
+
+OP's repo includes the trained SB3/PPO model:
+
+`robo1_getup_ppo.zip`
+
+It does not include the original training script that produced that model.
+
+Our scripts were simple local experiments:
+
+- `train_quick_ppo.py`: `20,000` timesteps
+- `train_medium_ppo.py`: `250,000` timesteps
+- `train_large_ppo.py`: `1,000,000` timesteps
+
+All three trained, but none reproduced OP's clean stand-up behavior.
+
+Evaluation:
+
+- OP model succeeds from all four fallen poses
+- our large model gets stuck partially upright around `0.65-0.73`
+- our large model runs the full `700` steps without reaching success
+
+Known PPO setting difference:
+
+```python
+# OP visible settings from saved model
+n_steps = 512
+batch_size = 256
+
+# our large run
+n_steps = 2048
+batch_size = 512
+```
+
+Interpretation:
+
+SB3/PPO is the general RL algorithm. Our training script is the experiment
+recipe. The algorithm was not the issue; our recipe was probably not the same
+as OP's recipe. Small choices like rollout length, batch size, random seed,
+checkpoint selection, and total training process can change the final behavior.
