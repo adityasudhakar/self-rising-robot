@@ -216,3 +216,28 @@ View the medium policy from the reference RL folder:
 ```bash
 ../../../.venv/bin/mjpython play_medium_policy.py --pose roll_pos
 ```
+
+## Large PPO Training Run
+
+Script:
+
+`train_large_ppo.py`
+
+Training setup:
+
+- algorithm: PPO
+- policy: MLP
+- timesteps: `1,000,000`
+- device: CPU
+- output: `robo1_getup_ppo_large.zip`
+
+Result:
+
+- training completed locally
+- final rollout reward was around `780`
+- reward mostly plateaued after the middle of training
+
+Interpretation:
+
+The large run produced a stronger policy artifact than the quick/medium runs,
+but we still need to visually test it across the fallen poses.
