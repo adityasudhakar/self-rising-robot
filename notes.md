@@ -172,3 +172,47 @@ View the quick policy from the reference RL folder:
 ```bash
 ../../../.venv/bin/mjpython play_quick_policy.py --pose roll_pos
 ```
+
+## Medium PPO Training Run
+
+Script:
+
+`train_medium_ppo.py`
+
+Run from the reference RL folder:
+
+```bash
+../../../.venv/bin/python train_medium_ppo.py
+```
+
+Training setup:
+
+- algorithm: PPO
+- policy: MLP
+- timesteps: `250,000`
+- device: CPU
+- output: `robo1_getup_ppo_medium.zip`
+
+Result:
+
+- training completed in about 3 minutes
+- reward was noisy, with some positive windows and some regressions
+- model is more balanced than the quick model, but still not fully solved
+
+Evaluation after training:
+
+- `roll_pos`: best upright `0.760`, final upright `0.723`
+- `roll_neg`: best upright `0.759`, final upright `0.723`
+- `pitch_pos`: best upright `0.724`, final upright `0.724`
+- `pitch_neg`: best upright `0.725`, final upright `0.725`
+
+Interpretation:
+
+The medium policy learned a generic partial recovery posture across all four
+poses, but it did not hit the success condition.
+
+View the medium policy from the reference RL folder:
+
+```bash
+../../../.venv/bin/mjpython play_medium_policy.py --pose roll_pos
+```
