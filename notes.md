@@ -128,3 +128,47 @@ Run from the RL folder:
 ```bash
 ../../.venv/bin/python ../../sim_smoke_test.py
 ```
+
+## Quick PPO Training Run
+
+Script:
+
+`train_quick_ppo.py`
+
+Run from the reference RL folder:
+
+```bash
+../../../.venv/bin/python train_quick_ppo.py
+```
+
+Training setup:
+
+- algorithm: PPO
+- policy: MLP
+- timesteps: `20,000`
+- device: CPU
+- output: `robo1_getup_ppo_quick.zip`
+
+Result:
+
+- training completed in under a minute on this machine
+- reward started very negative and improved during training
+- this is a weak/quick policy, not a fully solved policy
+
+Evaluation after training:
+
+- `roll_pos`: best upright `0.900`, final upright `0.871`
+- `roll_neg`: best upright `0.753`, final upright `0.700`
+- `pitch_pos`: best upright `0.497`, final upright `0.358`
+- `pitch_neg`: best upright `-0.157`, final upright `-0.370`
+
+Interpretation:
+
+The quick policy learned some useful motion for roll-based falls, but did not
+learn a reliable full get-up behavior across all poses.
+
+View the quick policy from the reference RL folder:
+
+```bash
+../../../.venv/bin/mjpython play_quick_policy.py --pose roll_pos
+```
