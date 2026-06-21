@@ -3,6 +3,19 @@
 Reference repo:
 https://github.com/homemadegarbage/SelfRisingRobot
 
+Inspiration and project links:
+
+- original inspiration tweet:
+  https://x.com/dannybuntu/status/2033184018704003504
+- HomeMadeGarbage project article:
+  https://homemadegarbage.com/rl13
+- HomeMadeGarbage sim policy tweet:
+  https://x.com/H0meMadeGarbage/status/2064276128773378552
+- HomeMadeGarbage real robot tweet:
+  https://x.com/H0meMadeGarbage/status/2064509515719118972
+- HomeMadeGarbage kick/fall/get-up demo:
+  https://x.com/H0meMadeGarbage/status/2064543080574001457
+
 ## What It Is
 
 Tiny 2-servo robot that learns a get-up motion in MuJoCo simulation, then runs
