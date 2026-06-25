@@ -701,3 +701,68 @@ Next steps:
    - Log failures with starting orientation and observed motion.
    - If the exact-pose policy is brittle on hardware, return to the selector or
      randomized-policy artifacts and harden with real IMU calibration data.
+
+## Hardware Bring-Up Status On 2026-06-24
+
+Current physical setup:
+
+- M5Stack Atom Matrix connected to Mac mini over USB-C
+- two servos wired through Grove breakout
+- base servo signal on `GPIO 26`
+- upper servo signal on `GPIO 32`
+- Atom ground tied to servo supply ground
+- external servo battery pack present but kept off during flashing work
+
+Local Arduino/tooling setup that is already done:
+
+- `esp32:esp32` core installed
+- `M5Atom` library installed
+- `ESP32Servo` library installed
+- correct Kalman library installed as `Kalman Filter Library`
+- sketch prepared from OP reference with:
+  - `Arduino/robo03/robo03.ino`
+  - `Arduino/robo03/policy_network.h`
+- compile succeeded for board `esp32:esp32:m5stack_atom`
+
+Important flashing/debugging status:
+
+- `arduino-cli upload` repeatedly failed
+- direct `esptool` sync also failed
+- repeated error:
+  - `Invalid head of packet (0x08): Possible serial noise or corruption`
+- same failure happened in `M5Burner` when using `tty.usbmodem14605`
+
+Useful USB/serial observations:
+
+- `tty.Bluetooth-Incoming-Port` is not the board
+- after reconnecting the Atom, `M5Burner` detected a new device:
+  - `tty.usbserial-7152ED3938`
+- this suggests the usable flashing port may actually be the `usbserial` device
+  after reconnect, not the earlier `usbmodem` device
+
+What was already tried:
+
+- direct USB connection to Mac mini instead of hub/strip
+- multiple manual boot attempts using top/side buttons
+- `M5Burner` with Atom Matrix firmware selected
+- serial monitor check with `screen`, but no useful boot text was seen
+
+Most likely current interpretation:
+
+- board is alive because LEDs run and reconnecting creates a serial device event
+- failure is still most likely bootloader/USB-serial mode handling, not yet a
+  confirmed dead board
+
+Immediate next step for whoever continues:
+
+1. Retry burn through `M5Burner` using `tty.usbserial-7152ED3938` if that port
+   is present.
+2. If burn succeeds, stop debugging flashing and move on to:
+   - confirm firmware upload path is healthy
+   - load the self-rising sketch again
+   - test IMU readings first with servos unpowered
+   - then power servos and test neutral motion
+3. If burn still fails on `tty.usbserial-7152ED3938`, focus next on:
+   - verifying exact Atom Matrix boot/reset button behavior from official docs
+   - checking whether another known-good USB cable changes behavior
+   - deciding whether the board hardware may be faulty
