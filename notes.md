@@ -11,6 +11,20 @@ https://x.com/H0meMadeGarbage/status/2064509515719118972?s=20
 Tiny 2-servo robot that learns a get-up motion in MuJoCo simulation, then runs
 the learned controller on a real M5Atom robot.
 
+## Product Objective
+
+Make a self-rising toy that could eventually be sold, not just a one-off desk
+prototype.
+
+That means the work now includes:
+
+- reliable self-standing behavior
+- compact onboard power
+- safe, durable wiring
+- printable or moldable parts
+- clean packaging/enclosure
+- repeatable assembly
+
 ## How The Repo Works
 
 1. `RL/robo1.xml` defines the physical robot in MuJoCo.
