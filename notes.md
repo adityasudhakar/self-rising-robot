@@ -766,3 +766,26 @@ Immediate next step for whoever continues:
    - verifying exact Atom Matrix boot/reset button behavior from official docs
    - checking whether another known-good USB cable changes behavior
    - deciding whether the board hardware may be faulty
+
+## Packaging And On-Board Power
+
+Shared packaging/power discussion:
+
+https://chatgpt.com/share/6a5a6d28-cc94-83e8-8632-e2f8d54a6461
+
+Demo/reference video added to this repo:
+
+`media/self-standing-bot-whatsapp-2026-07-16.mp4`
+
+The next physical-build challenge is making the robot self-contained instead
+of bench-wired. Bringing power on-board requires several practical electronics
+skills:
+
+- soldering reliable joints
+- splicing wires into clean Y junctions
+- adding heat shrink and strain relief
+- choosing battery, regulator, and switch paths that can handle servo current
+- eventually replacing loose wiring with a small custom PCB
+
+The main lesson is that the robot is no longer just a model plus firmware. To
+stand untethered, it also needs a compact, mechanically safe power system.
