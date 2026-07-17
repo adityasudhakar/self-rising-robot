@@ -6,6 +6,7 @@ on-device control, and policies trained in simulation.
 ## Videos
 
 - [V1: crooked bot straightens itself](media/crooked-bot.mp4)
+- [WhatsApp reference video, 2026-07-16](media/self-standing-bot-whatsapp-2026-07-16.mp4)
 
 ## Demos
 
