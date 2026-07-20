@@ -803,3 +803,43 @@ skills:
 
 The main lesson is that the robot is no longer just a model plus firmware. To
 stand untethered, it also needs a compact, mechanically safe power system.
+
+## Solar Charging Sizing
+
+Goal:
+
+Let the stand-up bot recharge without being plugged in. The expected use case is
+a desk/fidget toy: a person knocks it over a few times, it stands up each time,
+then it sits idle long enough to recharge.
+
+Sizing assumptions:
+
+- controller: M5Atom Matrix
+- actuators: two SG90 servos
+- solar should recharge the battery while idle
+- battery should handle the short servo-current bursts during stand-up
+
+Rule of thumb:
+
+- one stand-up event is a short burst, likely only a small amount of energy
+- many repeated events still matter less than leaving the controller awake all
+  day
+- deep sleep or low-power idle will matter later, but first solve solar charging
+  and onboard battery wiring
+
+Panel targets:
+
+- minimum useful prototype: `5 V` or `6 V`, `1 W`
+- better starting point: `6 V`, `3 W`
+- more margin for desk/window use: `6 V`, `5 W`
+
+Recommendation:
+
+Start with a `6 V 3 W` monocrystalline panel if size matters. Use `6 V 5 W` if
+the panel can live on a dock/base or if indoor/window light is weak.
+
+Product direction:
+
+Solar probably works best as a charging dock or stand, not wrapped around the
+robot body. A flat/sloped panel aimed at light should harvest more reliably than
+small curved or vertical panels on the robot.
