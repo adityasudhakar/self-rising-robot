@@ -29,6 +29,27 @@ That means the work now includes:
   disassembly
 - repeatable assembly
 
+Toy direction:
+
+Use a tiny wrestler or sumo character as the covering/enclosure. It fits the
+behavior: the toy gets knocked down, then fights its way back up. The electronics
+should disappear inside the body/base, with only the moving limbs and charging
+port exposed.
+
+Next productization steps:
+
+1. Update CAD around the actual electronics stack:
+   - M5Atom Matrix
+   - Rider board
+   - battery
+   - two SG90 servos
+   - wiring paths and strain relief
+2. Place the Rider board so the USB-C port is reachable from the outside.
+3. Design the sumo/wrestler shell to hide wires, boards, and battery without
+   blocking servo movement.
+4. Export updated STLs for the printable prototype.
+5. Slice the STLs into G-code for the target printer before printing.
+
 ## How The Repo Works
 
 1. `RL/robo1.xml` defines the physical robot in MuJoCo.
