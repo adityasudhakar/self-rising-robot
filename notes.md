@@ -23,6 +23,10 @@ That means the work now includes:
 - safe, durable wiring
 - printable or moldable parts
 - clean packaging/enclosure
+- concealed electronics: wires, battery, Rider board, and controller should not
+  be exposed in normal use
+- Rider board placement with USB-C exposed so the toy can be charged without
+  disassembly
 - repeatable assembly
 
 ## How The Repo Works
@@ -803,6 +807,13 @@ skills:
 
 The main lesson is that the robot is no longer just a model plus firmware. To
 stand untethered, it also needs a compact, mechanically safe power system.
+
+Current decision:
+
+Defer both deep sleep and solar charging for now. Neither is an incremental
+lift for the current prototype. The next practical product step is packaging:
+conceal exposed electricals and place the Rider board so its USB-C port remains
+accessible for normal charging.
 
 ## Solar Charging Sizing
 
