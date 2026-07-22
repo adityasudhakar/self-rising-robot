@@ -155,6 +155,22 @@ void reattachServo2() {
 }
 
 void startGetupMode() {
+  bool upright = fabsf(roll) < GETUP_DONE_TILT_RAD && fabsf(pitch) < GETUP_DONE_TILT_RAD;
+  if (upright) {
+    noInterrupts();
+    autoGetupEnabled = false;
+    servo1_target = 0.0f;
+    servo2_target = 0.0f;
+    robotMode = MODE_GETUP_DONE;
+    interrupts();
+
+    writeServoTargetsRad(servo1_target, servo2_target);
+    lastGetupEndMs = millis();
+    fallStartMs = 0;
+    uprightStartMs = 0;
+    return;
+  }
+
   attachServosNeutralStaggered();
 
   noInterrupts();
