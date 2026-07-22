@@ -136,6 +136,13 @@ void attachServosNeutralStaggered() {
   servosAttached = true;
 }
 
+void detachServos() {
+  servo1.detach();
+  servo2.detach();
+  servosAttached = false;
+  lastServoRampUs = 0;
+}
+
 void reattachServo1() {
   servo1.detach();
   servo1_request = clampf(ang1 * DEG_TO_RAD, -TARGET_LIMIT_RAD, TARGET_LIMIT_RAD);
@@ -155,6 +162,18 @@ void reattachServo2() {
 }
 
 void startGetupMode() {
+  if (!servosAttached) {
+    noInterrupts();
+    autoGetupEnabled = false;
+    robotMode = MODE_GETUP_ABORT;
+    interrupts();
+
+    lastGetupEndMs = millis();
+    fallStartMs = 0;
+    uprightStartMs = 0;
+    return;
+  }
+
   bool upright = fabsf(roll) < GETUP_DONE_TILT_RAD && fabsf(pitch) < GETUP_DONE_TILT_RAD;
   if (upright) {
     noInterrupts();
@@ -170,8 +189,6 @@ void startGetupMode() {
     uprightStartMs = 0;
     return;
   }
-
-  attachServosNeutralStaggered();
 
   noInterrupts();
   autoGetupEnabled = true;
@@ -347,6 +364,10 @@ void handleRoot() {
 
   temp +="mode<br>";
   temp +="<span>" + String(modeName()) + "</span><br>";
+  temp +="servos<br>";
+  temp +="<span>" + String(servosAttached ? "ARMED" : "OFF") + "</span><br>";
+  temp +="<a href=\"/armServos\"><button class=\"on\">ARM</button></a>";
+  temp +="<a href=\"/disarmServos\"><button>DISARM</button></a><br>";
   temp +="<a href=\"/getupStart\"><button class=\"on\">GETUP</button></a>";
   temp +="<a href=\"/getupStop\"><button>STOP</button></a><br>";
   temp +="auto getup<br>";
@@ -504,6 +525,18 @@ void getupStart() {
   handleRoot();
 }
 
+void armServos() {
+  attachServosNeutralStaggered();
+  handleRoot();
+}
+
+void disarmServos() {
+  autoGetupEnabled = false;
+  stopGetupMode(MODE_MANUAL);
+  detachServos();
+  handleRoot();
+}
+
 void getupStop() {
   autoGetupEnabled = false;
   stopGetupMode(MODE_MANUAL);
@@ -549,6 +582,8 @@ void core0(void *){
 
   server.on("/getupStart", getupStart);
   server.on("/getupStop", getupStop);
+  server.on("/armServos", armServos);
+  server.on("/disarmServos", disarmServos);
   server.on("/autoOn", autoOn);
   server.on("/autoOff", autoOff);
   
