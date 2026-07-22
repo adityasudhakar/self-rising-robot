@@ -23,6 +23,8 @@ int ang2 = 0, offset2 = 0, pulse2 = 1000;
 
 float pitch, roll;
 float servo1_target = 0.0f, servo2_target = 0.0f;
+float servo1_request = 0.0f, servo2_request = 0.0f;
+float servo1_actual = 0.0f, servo2_actual = 0.0f;
 
 float accX = 0, accY = 0, accZ = 0;
 float gyroX = 0, gyroY = 0, gyroZ = 0;
@@ -54,8 +56,8 @@ const unsigned long GETUP_PERIOD_US = 20000;
 const unsigned long GETUP_TIMEOUT_MS = 14000;
 const float GETUP_DONE_TILT_RAD = 0.25f;
 const unsigned long GETUP_DONE_HOLD_MS = 700;
-const float NEUTRAL_RAMP_DELTA_RAD = 0.02f;
-const unsigned long NEUTRAL_RAMP_PERIOD_US = 20000;
+const float SERVO_RAMP_DELTA_RAD = 0.02f;
+const unsigned long SERVO_RAMP_PERIOD_US = 20000;
 const float AUTO_FALL_TILT_RAD = 0.75f;
 const unsigned long AUTO_FALL_HOLD_MS = 300;
 const unsigned long AUTO_RESTART_COOLDOWN_MS = 1500;
@@ -65,7 +67,7 @@ unsigned long getupStartMs = 0;
 unsigned long uprightStartMs = 0;
 unsigned long fallStartMs = 0;
 unsigned long lastGetupEndMs = 0;
-unsigned long lastNeutralRampUs = 0;
+unsigned long lastServoRampUs = 0;
 
 float clampf(float x, float lo, float hi) {
   if (x < lo) return lo;
@@ -74,6 +76,11 @@ float clampf(float x, float lo, float hi) {
 }
 
 void writeServoTargetsRad(float target1, float target2) {
+  servo1_request = clampf(target1, -TARGET_LIMIT_RAD, TARGET_LIMIT_RAD);
+  servo2_request = clampf(target2, -TARGET_LIMIT_RAD, TARGET_LIMIT_RAD);
+}
+
+void writeServosNowRad(float target1, float target2) {
   int deg1 = (int)roundf(target1 * RAD_TO_DEG);
   int deg2 = (int)roundf(target2 * RAD_TO_DEG);
   deg1 = (int)clampf(deg1, -90, 90);
@@ -83,8 +90,38 @@ void writeServoTargetsRad(float target1, float target2) {
   servo2.write(-deg2 + 90);
 }
 
+float stepToward(float value, float target, float step) {
+  if (value + step < target) return value + step;
+  if (value - step > target) return value - step;
+  return target;
+}
+
+bool servosAtRequest() {
+  return servo1_actual == servo1_request && servo2_actual == servo2_request;
+}
+
+void serviceServos() {
+  if (!servosAttached) return;
+
+  unsigned long nowUs = micros();
+  if (lastServoRampUs != 0 && nowUs - lastServoRampUs < SERVO_RAMP_PERIOD_US) {
+    return;
+  }
+  lastServoRampUs = nowUs;
+
+  servo1_actual = stepToward(servo1_actual, servo1_request, SERVO_RAMP_DELTA_RAD);
+  servo2_actual = stepToward(servo2_actual, servo2_request, SERVO_RAMP_DELTA_RAD);
+  writeServosNowRad(servo1_actual, servo2_actual);
+}
+
 void attachServosNeutralStaggered() {
   if (servosAttached) return;
+
+  servo1_request = 0.0f;
+  servo2_request = 0.0f;
+  servo1_actual = 0.0f;
+  servo2_actual = 0.0f;
+  lastServoRampUs = 0;
 
   servo1.setPeriodHertz(50);
   servo1.write(90);
@@ -101,6 +138,8 @@ void attachServosNeutralStaggered() {
 
 void reattachServo1() {
   servo1.detach();
+  servo1_request = clampf(ang1 * DEG_TO_RAD, -TARGET_LIMIT_RAD, TARGET_LIMIT_RAD);
+  servo1_actual = servo1_request;
   servo1.write(-ang1 + 90);
   servo1.attach(26, 1500 + offset1 - pulse1, 1500 + offset1 + pulse1);
   servosAttached = true;
@@ -108,6 +147,8 @@ void reattachServo1() {
 
 void reattachServo2() {
   servo2.detach();
+  servo2_request = clampf(ang2 * DEG_TO_RAD, -TARGET_LIMIT_RAD, TARGET_LIMIT_RAD);
+  servo2_actual = servo2_request;
   servo2.write(-ang2 + 90);
   servo2.attach(32, 1500 + offset2 - pulse2, 1500 + offset2 + pulse2);
   servosAttached = true;
@@ -143,7 +184,9 @@ void startNeutralRampMode() {
   interrupts();
   lastGetupEndMs = millis();
   fallStartMs = 0;
-  lastNeutralRampUs = 0;
+  servo1_target = 0.0f;
+  servo2_target = 0.0f;
+  writeServoTargetsRad(servo1_target, servo2_target);
 }
 
 const char *modeName() {
@@ -193,8 +236,8 @@ void runGetupPolicy() {
   float obs[OBS_DIM] = {
     roll,
     pitch,
-    servo1_target,
-    servo2_target,
+    servo1_actual,
+    servo2_actual,
   };
   float action[ACTION_DIM];
   forward_policy(obs, action);
@@ -225,24 +268,8 @@ void runGetupPolicy() {
   }
 }
 
-float stepTowardZero(float value, float step) {
-  if (value > step) return value - step;
-  if (value < -step) return value + step;
-  return 0.0f;
-}
-
 void runNeutralRamp() {
-  unsigned long nowUs = micros();
-  if (lastNeutralRampUs != 0 && nowUs - lastNeutralRampUs < NEUTRAL_RAMP_PERIOD_US) {
-    return;
-  }
-  lastNeutralRampUs = nowUs;
-
-  servo1_target = stepTowardZero(servo1_target, NEUTRAL_RAMP_DELTA_RAD);
-  servo2_target = stepTowardZero(servo2_target, NEUTRAL_RAMP_DELTA_RAD);
-  writeServoTargetsRad(servo1_target, servo2_target);
-
-  if (servo1_target == 0.0f && servo2_target == 0.0f) {
+  if (servosAtRequest()) {
     stopGetupMode(MODE_GETUP_DONE);
   }
 }
@@ -600,16 +627,15 @@ void loop(){
 
   if (robotMode == MODE_GETUP) {
     runGetupPolicy();
-    delay(1);
   } else if (robotMode == MODE_NEUTRAL_RAMP) {
     runNeutralRamp();
-    delay(1);
   } else {
     if (servosAttached) {
-      servo1.write(-ang1 + 90);
-      servo2.write(-ang2 + 90);
+      writeServoTargetsRad(ang1 * DEG_TO_RAD, ang2 * DEG_TO_RAD);
     }
-    delay(10);
   }
+
+  serviceServos();
+  delay(robotMode == MODE_MANUAL ? 10 : 1);
 
 }
