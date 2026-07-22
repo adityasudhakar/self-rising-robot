@@ -16,6 +16,7 @@ const IPAddress ip(192,168,42,1);
 const IPAddress subnet(255,255,255,0);
 
 Servo servo1, servo2;
+bool servosAttached = false;
 
 int ang1 = 0, offset1 = 0, pulse1 = 1000;
 int ang2 = 0, offset2 = 0, pulse2 = 1000;
@@ -45,7 +46,7 @@ enum RobotMode {
 };
 
 volatile RobotMode robotMode = MODE_MANUAL;
-volatile bool autoGetupEnabled = true;
+volatile bool autoGetupEnabled = false;
 
 const float TARGET_DELTA_RAD = 0.08f;
 const float TARGET_LIMIT_RAD = 1.55f;
@@ -82,7 +83,39 @@ void writeServoTargetsRad(float target1, float target2) {
   servo2.write(-deg2 + 90);
 }
 
+void attachServosNeutralStaggered() {
+  if (servosAttached) return;
+
+  servo1.setPeriodHertz(50);
+  servo1.write(90);
+  servo1.attach(26, 1500 + offset1 - pulse1, 1500 + offset1 + pulse1);
+  delay(250);
+
+  servo2.setPeriodHertz(50);
+  servo2.write(90);
+  servo2.attach(32, 1500 + offset2 - pulse2, 1500 + offset2 + pulse2);
+  delay(250);
+
+  servosAttached = true;
+}
+
+void reattachServo1() {
+  servo1.detach();
+  servo1.write(-ang1 + 90);
+  servo1.attach(26, 1500 + offset1 - pulse1, 1500 + offset1 + pulse1);
+  servosAttached = true;
+}
+
+void reattachServo2() {
+  servo2.detach();
+  servo2.write(-ang2 + 90);
+  servo2.attach(32, 1500 + offset2 - pulse2, 1500 + offset2 + pulse2);
+  servosAttached = true;
+}
+
 void startGetupMode() {
+  attachServosNeutralStaggered();
+
   noInterrupts();
   autoGetupEnabled = true;
   servo1_target = 0.0f;
@@ -344,8 +377,7 @@ void offset1M() {
   if(offset1 >= -300){
     offset1 -= 2;
     preferences.putInt("offset1", offset1);
-    servo1.detach();
-    servo1.attach(26, 1500 + offset1 - pulse1, 1500 + offset1 + pulse1);
+    reattachServo1();
   }
   handleRoot();
 }
@@ -353,8 +385,7 @@ void offset1P() {
   if(offset1 <= 300){
     offset1 += 2;
     preferences.putInt("offset1", offset1);
-    servo1.detach();
-    servo1.attach(26, 1500 + offset1 - pulse1, 1500 + offset1 + pulse1);
+    reattachServo1();
   }
   handleRoot();
 }
@@ -363,8 +394,7 @@ void pulse1M() {
   if(pulse1 > 0){
     pulse1 -= 20;
     preferences.putInt("pulse1", pulse1);
-    servo1.detach();
-    servo1.attach(26, 1500 + offset1 - pulse1, 1500 + offset1 + pulse1);
+    reattachServo1();
   }
   handleRoot();
 }
@@ -372,8 +402,7 @@ void pulse1P() {
   if(pulse1 <= 1200){
     pulse1 += 20;
     preferences.putInt("pulse1", pulse1);
-    servo1.detach();
-    servo1.attach(26, 1500 + offset1 - pulse1, 1500 + offset1 + pulse1);
+    reattachServo1();
   }
   handleRoot();
 }
@@ -397,8 +426,7 @@ void offset2M() {
   if(offset2 >= -300){
     offset2 -= 2;
     preferences.putInt("offset2", offset2);
-    servo2.detach();
-    servo2.attach(32, 1500 + offset2 - pulse2, 1500 + offset2 + pulse2);
+    reattachServo2();
   }
   handleRoot();
 }
@@ -406,8 +434,7 @@ void offset2P() {
   if(offset2 <= 300){
     offset2 += 2;
     preferences.putInt("offset2", offset2);
-    servo2.detach();
-    servo2.attach(32, 1500 + offset2 - pulse2, 1500 + offset2 + pulse2);
+    reattachServo2();
   }
   handleRoot();
 }
@@ -416,8 +443,7 @@ void pulse2M() {
   if(pulse2 > 0){
     pulse2 -= 20;
     preferences.putInt("pulse2", pulse2);
-    servo2.detach();
-    servo2.attach(32, 1500 + offset2 - pulse2, 1500 + offset2 + pulse2);
+    reattachServo2();
   }
   handleRoot();
 }
@@ -425,8 +451,7 @@ void pulse2P() {
   if(pulse2 <= 1200){
     pulse2 += 20;
     preferences.putInt("pulse2", pulse2);
-    servo2.detach();
-    servo2.attach(32, 1500 + offset2 - pulse2, 1500 + offset2 + pulse2);
+    reattachServo2();
   }
   handleRoot();
 }
@@ -520,11 +545,6 @@ void setup(){
   kalmanX.setAngle(theta_X);
   kalmanY.setAngle(theta_Y);
 
-  servo1.setPeriodHertz(50);
-  servo1.attach(26, 1500 + offset1 - pulse1, 1500 + offset1 + pulse1);
-  servo2.setPeriodHertz(50);
-  servo2.attach(32, 1500 + offset2 - pulse2, 1500 + offset2 + pulse2);
-
   // Core0 start
   xTaskCreatePinnedToCore(core0,"core0",4096,NULL,1,NULL,0);
 
@@ -585,8 +605,10 @@ void loop(){
     runNeutralRamp();
     delay(1);
   } else {
-    servo1.write(-ang1 + 90);
-    servo2.write(-ang2 + 90);
+    if (servosAttached) {
+      servo1.write(-ang1 + 90);
+      servo2.write(-ang2 + 90);
+    }
     delay(10);
   }
 
