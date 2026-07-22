@@ -67,6 +67,74 @@ The code uses:
 - Wi-Fi access point `robo1`
 - browser UI at `http://192.168.42.1`
 
+## Real Robot Bring-Up Status
+
+As of 2026-07-21, the project is past simulation-only work:
+
+- MuJoCo simulation runs.
+- The learned policy has been moved onto the real M5Atom robot.
+- The real robot can stand itself up.
+- The next active problem is making onboard power reliable.
+
+Baseline that worked:
+
+- M5Atom powered from Mac mini over USB.
+- Servos powered separately from a bulky 4xAA battery pack.
+- Atom and servo grounds tied together.
+- Robot could stand up on real hardware.
+
+Onboard power hardware now being tested:
+
+- LiPo Rider Plus charger/booster, 5V output.
+- 3.7V 1000mAh LiPo pack, about 3.7Wh.
+- Rider USB-A can power the Atom over USB-C.
+- Rider 5V/GND pins can power the servo rail.
+- Atom GND, servo GNDs, and Rider GND must be common.
+
+Important wiring finding:
+
+- The LiPo JST polarity did not match the Rider socket at first.
+- Board socket marked `+` and `-` must match battery red and black.
+- After swapping the JST wires to correct polarity, the Rider powered up
+  properly.
+
+Observed failures:
+
+- During aggressive two-servo get-up motion, the LiPo Rider sometimes shut
+  down completely.
+- Shutdown usually looked like Rider LEDs going dark and `robo1` disappearing.
+- Brownout was often preceded by servo buzzing/grinding, suggesting a stall or
+  current spike.
+- Mac USB also reported "USB Accessories Disabled" when a high-current or
+  backfeed path was present.
+- Servos sometimes appeared powered even when the Rider 5V servo wire was
+  disconnected; this likely means the servo power splice was still connected to
+  the Atom USB/5V rail somewhere. Final tests should avoid powering Atom by USB
+  and 5V at the same time.
+
+Firmware mitigations tried:
+
+- Added a neutral ramp after successful get-up so servos return toward neutral
+  gradually instead of snapping back.
+- This appears to help: brownouts during normal operation have mostly stopped.
+- Added boot/attach mitigation on branch `firmware-upright-neutral-ramp`:
+  - auto-getup defaults off
+  - servos are not attached during boot
+  - servos attach only when get-up starts
+  - first attach is staggered so both servos do not wake at exactly the same
+    instant
+
+Current open issue:
+
+- Brownout can still happen at boot or first servo enable.
+- Need more tests with Atom powered only from the Rider, servo 5V from Rider,
+  and no Mac USB connected.
+- If firmware mitigation is not enough, likely next hardware fixes are:
+  - thicker/shorter 5V and GND wiring for servo power
+  - 470uF to 1000uF capacitor across servo 5V/GND near the servos
+  - dedicated higher-current 5V BEC/regulator for servos
+  - grippier feet/edges so the servos do not stall on slippery PLA/surface
+
 ## M5Atom Choice
 
 Do not use Arduino Uno for this version. Uno lacks built-in Wi-Fi and IMU, has
